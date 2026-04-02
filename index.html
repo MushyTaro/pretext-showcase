@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pretext — Text Layout Without DOM Reflow</title>
+  <meta name="description" content="Interactive demo of @chenglou/pretext — a JS library that measures multiline text height without triggering DOM layout reflow. Supports all languages, emoji, and bidirectional text.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="logo" href="#">pretext<span class="badge">demo</span></a>
+  <div class="nav-links">
+    <a href="#playground">Playground</a>
+    <a href="#masonry">Masonry</a>
+    <a href="#languages">Languages</a>
+    <a href="https://github.com/chenglou/pretext" target="_blank" rel="noopener" class="nav-gh">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+      GitHub
+    </a>
+  </div>
+</nav>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="pill">open source · MIT license</div>
+    <h1>Measure text<br><span class="gradient-text">without DOM reflow</span></h1>
+    <p class="hero-desc">
+      <code>@chenglou/pretext</code> measures multiline text height using Canvas <code>measureText</code> +
+      pure arithmetic — bypassing costly DOM layout entirely. Works with every language, emoji, and
+      bidirectional text.
+    </p>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-num">~19ms</span>
+        <span class="stat-label">prepare() · 500 texts</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <span class="stat-num">~0.09ms</span>
+        <span class="stat-label">layout() · 500 texts</span>
+      </div>
+      <div class="stat-sep"></div>
+      <div class="stat">
+        <span class="stat-num" id="reflow-counter">0</span>
+        <span class="stat-label">DOM reflows this session</span>
+      </div>
+    </div>
+
+    <div class="hero-cta">
+      <a href="#playground" class="btn-primary">Try the demos ↓</a>
+      <a href="https://github.com/chenglou/pretext" target="_blank" rel="noopener" class="btn-ghost">View source</a>
+    </div>
+  </div>
+  <div class="hero-code">
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot red"></span>
+        <span class="code-dot yellow"></span>
+        <span class="code-dot green"></span>
+        <span class="code-filename">example.js</span>
+      </div>
+      <pre><code><span class="kw">import</span> { prepare, layout } <span class="kw">from</span> <span class="str">'@chenglou/pretext'</span>
+
+<span class="comment">// Step 1 — run once per text (segments + canvas measure)</span>
+<span class="kw">const</span> prepared = prepare(
+  <span class="str">'AGI 春天到了. بدأت الرحلة 🚀'</span>,
+  <span class="str">'16px Inter'</span>
+)
+
+<span class="comment">// Step 2 — pure arithmetic, called on EVERY resize</span>
+<span class="comment">// No DOM. No reflow. ~0.0002ms per call.</span>
+<span class="kw">const</span> { height, lineCount } = layout(
+  prepared,
+  <span class="num">320</span>,   <span class="comment">// maxWidth in px</span>
+  <span class="num">24</span>    <span class="comment">// lineHeight in px</span>
+)
+
+<span class="comment">// → { height: 48, lineCount: 2 }</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section class="how-it-works">
+  <div class="container">
+    <div class="section-label">Under the hood</div>
+    <h2>Two phases, one insight</h2>
+    <div class="steps">
+
+      <div class="step">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+        </div>
+        <h3>The DOM Problem</h3>
+        <p>
+          Calling <code>getBoundingClientRect()</code> or reading <code>offsetHeight</code>
+          forces the browser to synchronously flush all pending style/layout changes —
+          a full <strong>layout reflow</strong>. 500 text blocks = 500 reflows = 30ms+ per frame.
+        </p>
+        <div class="step-tag bad">expensive</div>
+      </div>
+
+      <div class="step-arrow">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </div>
+
+      <div class="step">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <h3>prepare(text, font)</h3>
+        <p>
+          Segments text with <code>Intl.Segmenter</code>, measures each word width via Canvas
+          <code>measureText</code>, and caches the results. Handles emoji correction,
+          bidirectional levels, CJK per-char breaking. Runs <strong>once per text</strong>.
+        </p>
+        <div class="step-tag neutral">one-time cost</div>
+      </div>
+
+      <div class="step-arrow">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </div>
+
+      <div class="step">
+        <div class="step-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <h3>layout(prepared, w, lh)</h3>
+        <p>
+          Pure arithmetic over cached widths. Walks segments, sums widths, breaks lines —
+          no DOM, no canvas, no side effects. Safe to call on <strong>every pixel of resize</strong>.
+          ~0.0002ms per text.
+        </p>
+        <div class="step-tag good">near-zero cost</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── PLAYGROUND ── -->
+<section class="playground" id="playground">
+  <div class="container">
+    <div class="section-label">Interactive demo</div>
+    <h2>Live Playground</h2>
+    <p class="section-desc">
+      Edit the text or drag the sliders — pretext measures in real-time with zero DOM reflow.
+      The preview box reflects actual CSS layout so you can verify accuracy.
+    </p>
+
+    <div class="playground-grid">
+      <div class="playground-left">
+        <label class="field-label">Text input</label>
+        <textarea id="pg-text" spellcheck="false">AGI 春天到了. بدأت الرحلة 🚀
+
+The quick brown fox jumps over the lazy dog.
+Sphinx of black quartz, judge my vow.
+
+👨‍💻 Building cool stuff with text layout 📐</textarea>
+
+        <div class="slider-group">
+          <div class="slider-row">
+            <label>Max width <span class="slider-val" id="pg-width-val">300</span>px</label>
+            <input type="range" id="pg-width" min="80" max="560" value="300">
+          </div>
+          <div class="slider-row">
+            <label>Line height <span class="slider-val" id="pg-lh-val">24</span>px</label>
+            <input type="range" id="pg-lh" min="14" max="48" value="24">
+          </div>
+          <div class="slider-row">
+            <label>Font size <span class="slider-val" id="pg-fs-val">16</span>px</label>
+            <input type="range" id="pg-fs" min="10" max="32" value="16">
+          </div>
+        </div>
+      </div>
+
+      <div class="playground-right">
+        <div class="preview-wrapper">
+          <div class="preview-label">CSS rendering</div>
+          <div class="preview-outer">
+            <div id="pg-preview" class="pg-preview-text"></div>
+            <div id="pg-height-ruler" class="height-ruler">
+              <span id="pg-ruler-label"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-val" id="m-lines">—</div>
+            <div class="metric-label">Lines</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val" id="m-height">—</div>
+            <div class="metric-label">Height</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-val" id="m-time">—</div>
+            <div class="metric-label">layout() avg</div>
+          </div>
+          <div class="metric-card accent">
+            <div class="metric-val">0</div>
+            <div class="metric-label">DOM reflows</div>
+          </div>
+        </div>
+
+        <div class="no-reflow-pill">
+          <span class="pulse-dot"></span>
+          Zero DOM reflow — pretext never reads offsetHeight, getBoundingClientRect, or scrollHeight
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── MASONRY ── -->
+<section class="masonry-section" id="masonry">
+  <div class="container">
+    <div class="section-label">Real-world use case</div>
+    <h2>Masonry Layout</h2>
+    <p class="section-desc">
+      True masonry requires knowing each card's exact height before placing it.
+      pretext provides those heights without DOM reflow — enabling shortest-column
+      placement on every resize. <strong>Try resizing your browser window.</strong>
+    </p>
+  </div>
+  <div id="masonry-root" class="masonry-root"></div>
+</section>
+
+<!-- ── LANGUAGES ── -->
+<section class="languages" id="languages">
+  <div class="container">
+    <div class="section-label">i18n support</div>
+    <h2>Every Writing System</h2>
+    <p class="section-desc">
+      pretext handles CJK (character-level breaks), Arabic &amp; Hebrew (RTL + bidi),
+      Devanagari, Thai, Khmer, emoji sequences, and mixed bidirectional text —
+      with emoji canvas/DOM correction built in.
+    </p>
+    <div class="lang-grid" id="lang-grid"></div>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="container footer-inner">
+    <div class="footer-left">
+      <span class="logo-sm">pretext</span>
+      <span class="footer-desc">
+        Library by <a href="https://github.com/chenglou" target="_blank" rel="noopener">Cheng Lou</a>.
+        Demo built to explore and share.
+      </span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/chenglou/pretext" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="https://www.npmjs.com/package/@chenglou/pretext" target="_blank" rel="noopener">npm ↗</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
