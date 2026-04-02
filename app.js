@@ -191,56 +191,63 @@ function initMasonry() {
 // LANGUAGE SHOWCASE
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Each entry carries the fontFamily used for both CSS rendering AND canvas
+// measurement so the two always agree. Noto fonts are loaded from Google
+// Fonts in index.html; document.fonts.load() below waits for each one.
 const LANGUAGES = [
   {
     name: 'English',
     text: 'The quick brown fox jumps over the lazy dog. Sphinx of black quartz, judge my vow.',
+    fontFamily: 'Inter, sans-serif',
   },
   {
     name: 'Japanese',
     text: '吾輩は猫である。名前はまだ無い。どこで生れたかとんと見当がつかぬ。',
+    fontFamily: '"Noto Sans JP", sans-serif',
   },
   {
     name: 'Arabic (RTL)',
     text: 'في البدء كانت الكلمة، وكانت الكلمة عند الله، وكان الله هو الكلمة.',
+    fontFamily: '"Noto Sans Arabic", sans-serif',
   },
   {
     name: 'Chinese (Simplified)',
     text: '我本来想去图书馆，但是天气太热了，所以我就待在家里看书了。',
+    fontFamily: '"Noto Sans SC", sans-serif',
   },
   {
     name: 'Hindi (Devanagari)',
     text: 'मेरा नाम है और मैं एक विद्यार्थी हूँ जो हिन्दी सीख रहा है।',
+    fontFamily: '"Noto Sans Devanagari", sans-serif',
   },
   {
     name: 'Korean (Hangul)',
     text: '안녕하세요! 저는 프론트엔드 개발자입니다. 텍스트 레이아웃에 관심이 있어요.',
+    fontFamily: '"Noto Sans KR", sans-serif',
   },
   {
     name: 'Emoji + ZWJ Sequences',
     text: '👨‍💻 Building cool stuff 🚀 with text layout 📐 and zero reflow ⚡ — supporting all scripts 🌍 including 👨‍👩‍👧‍👦 families.',
+    fontFamily: 'Inter, sans-serif',
   },
   {
     name: 'Mixed Bidi',
-    text: 'Hello مرحبا world! English and العربية mixed שלום in one paragraph without special cases.',
+    text: 'Hello مرحبا world! English and العربية mixed in one paragraph without special cases.',
+    fontFamily: '"Noto Sans Arabic", Inter, sans-serif',
   },
 ]
 
-function initLanguages() {
+async function initLanguages() {
   const grid = document.getElementById('lang-grid')
-  // Use system-ui so canvas measureText and CSS rendering both pick the
-  // same OS font — which actually has glyphs for CJK, Arabic, Devanagari, etc.
-  // (system-ui has a known optical-size quirk on macOS; for a multi-script
-  // demo the slight measurement delta is acceptable vs. boxes for every card.)
-  const FONT = '16px system-ui, sans-serif'
-  const LH   = 26
-  const W    = 280
+  const LH = 26
+  const W  = 280
 
-  LANGUAGES.forEach(({ name, text }) => {
-    const p = prepare(text, FONT)
-    const { height, lineCount } = layout(p, W, LH)
+  // Build DOM first so font references exist in the document,
+  // then explicitly load each font before measuring.
+  const entries = []
 
-    const card  = document.createElement('div')
+  LANGUAGES.forEach(({ name, text, fontFamily }) => {
+    const card = document.createElement('div')
     card.className = 'lang-card'
 
     const nameEl = document.createElement('div')
@@ -249,16 +256,37 @@ function initLanguages() {
 
     const textEl = document.createElement('div')
     textEl.className = 'lang-text'
+    textEl.style.fontFamily = fontFamily
     textEl.textContent = text
 
     const metricsEl = document.createElement('div')
     metricsEl.className = 'lang-metrics'
-    metricsEl.innerHTML = `<span>${lineCount} line${lineCount !== 1 ? 's' : ''}</span><span>${height.toFixed(0)}px</span>`
+    metricsEl.innerHTML = '<span>…</span><span>…</span>'
 
     card.appendChild(nameEl)
     card.appendChild(textEl)
     card.appendChild(metricsEl)
     grid.appendChild(card)
+
+    entries.push({ text, fontFamily, metricsEl })
+  })
+
+  // Wait for every unique font to actually download before running prepare().
+  // document.fonts.load() returns a promise that resolves once the font file
+  // is available for canvas — this is the key step that was missing.
+  await Promise.all(
+    [...new Set(LANGUAGES.map(l => l.fontFamily))].map(ff =>
+      document.fonts.load(`16px ${ff}`).catch(() => {})
+    )
+  )
+
+  // Now measure with the same font used for CSS rendering.
+  entries.forEach(({ text, fontFamily, metricsEl }) => {
+    const font = `16px ${fontFamily}`
+    const p = prepare(text, font)
+    const { height, lineCount } = layout(p, W, LH)
+    metricsEl.innerHTML =
+      `<span>${lineCount} line${lineCount !== 1 ? 's' : ''}</span><span>${height.toFixed(0)}px</span>`
   })
 }
 
