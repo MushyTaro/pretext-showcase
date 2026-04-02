@@ -228,7 +228,11 @@ const LANGUAGES = [
 
 function initLanguages() {
   const grid = document.getElementById('lang-grid')
-  const FONT = '16px Inter, sans-serif'
+  // Use system-ui so canvas measureText and CSS rendering both pick the
+  // same OS font — which actually has glyphs for CJK, Arabic, Devanagari, etc.
+  // (system-ui has a known optical-size quirk on macOS; for a multi-script
+  // demo the slight measurement delta is acceptable vs. boxes for every card.)
+  const FONT = '16px system-ui, sans-serif'
   const LH   = 26
   const W    = 280
 

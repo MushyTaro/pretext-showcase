@@ -672,6 +672,7 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 }
 
 .lang-text {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 0.9375rem;
   color: var(--text);
   line-height: 1.65;
