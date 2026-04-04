@@ -96,10 +96,15 @@ function initPlayground() {
 const CHAT_FONT = '15px Inter, sans-serif'
 const CHAT_LH   = 23
 
-/** Binary-search the tightest maxWidth that keeps the same line count. */
-function shrinkWrapWidth(prepared) {
-  const { lineCount } = layout(prepared, 9999, CHAT_LH)
-  let lo = 1, hi = 9999
+/**
+ * Binary-search the tightest maxWidth that keeps the same line count.
+ * cap = the reference width used to determine the target line count.
+ * For long texts that span multiple lines at `cap`, we find the minimum
+ * width that still produces that many lines — no wasted horizontal space.
+ */
+function shrinkWrapWidth(prepared, cap = 560) {
+  const { lineCount } = layout(prepared, cap, CHAT_LH)
+  let lo = 1, hi = cap
   for (let i = 0; i < 24; i++) {
     const mid = (lo + hi) / 2
     if (layout(prepared, mid, CHAT_LH).lineCount <= lineCount) hi = mid
@@ -124,8 +129,11 @@ function initChatBubbles() {
 
   function addBubble(text, side, sender) {
     const HPAD = 28   // left+right padding inside bubble (14px each side)
+    // Cap at 80% of the chat window width (or 560px max) so long messages
+    // wrap sensibly rather than measuring as a single 1500px-wide line.
+    const cap = Math.min(Math.floor((win.clientWidth || 640) * 0.8), 560)
     const prepared = prepare(text, CHAT_FONT)
-    const w = shrinkWrapWidth(prepared) + HPAD
+    const w = shrinkWrapWidth(prepared, cap) + HPAD
 
     const row = document.createElement('div')
     row.className = `bubble-row ${side}`
