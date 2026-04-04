@@ -96,7 +96,7 @@
     <h2>Two phases, one insight</h2>
     <div class="steps">
 
-      <div class="step">
+      <div class="step reveal">
         <div class="step-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
         </div>
@@ -113,7 +113,7 @@
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
       </div>
 
-      <div class="step">
+      <div class="step reveal" style="transition-delay:80ms">
         <div class="step-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
@@ -130,7 +130,7 @@
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
       </div>
 
-      <div class="step">
+      <div class="step reveal" style="transition-delay:160ms">
         <div class="step-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
@@ -157,7 +157,7 @@
       The preview box reflects actual CSS layout so you can verify accuracy.
     </p>
 
-    <div class="playground-grid">
+    <div class="playground-grid reveal">
       <div class="playground-left">
         <label class="field-label">Text input</label>
         <textarea id="pg-text" spellcheck="false">AGI 春天到了. بدأت الرحلة 🚀
@@ -250,7 +250,7 @@ Sphinx of black quartz, judge my vow.
       A 2D wave height map propagates across a grid — <code>transform</code> is the only property
       updated per frame. Move your mouse or click to make waves.
     </p>
-    <div class="ripple-stage" id="ripple-stage"></div>
+    <div class="ripple-stage reveal" id="ripple-stage"></div>
   </div>
 </section>
 
@@ -264,6 +264,51 @@ Sphinx of black quartz, judge my vow.
       Devanagari, Thai, Khmer, emoji sequences, and mixed bidirectional text —
       with emoji canvas/DOM correction built in.
     </p>
+    <div class="lang-marquee-wrap">
+      <div class="lang-marquee-inner">
+        <span class="lang-pill">English</span>
+        <span class="lang-pill">中文 Chinese</span>
+        <span class="lang-pill">日本語 Japanese</span>
+        <span class="lang-pill">한국어 Korean</span>
+        <span class="lang-pill">العربية Arabic</span>
+        <span class="lang-pill">हिन्दी Hindi</span>
+        <span class="lang-pill">Español</span>
+        <span class="lang-pill">Français</span>
+        <span class="lang-pill">Deutsch</span>
+        <span class="lang-pill">Português</span>
+        <span class="lang-pill">Русский</span>
+        <span class="lang-pill">Italiano</span>
+        <span class="lang-pill">ภาษาไทย Thai</span>
+        <span class="lang-pill">Tiếng Việt</span>
+        <span class="lang-pill">עברית Hebrew</span>
+        <span class="lang-pill">বাংলা Bengali</span>
+        <span class="lang-pill">Ελληνικά Greek</span>
+        <span class="lang-pill">Polski</span>
+        <span class="lang-pill">Türkçe</span>
+        <span class="lang-pill">Nederlands</span>
+        <!-- duplicate for seamless loop -->
+        <span class="lang-pill">English</span>
+        <span class="lang-pill">中文 Chinese</span>
+        <span class="lang-pill">日本語 Japanese</span>
+        <span class="lang-pill">한국어 Korean</span>
+        <span class="lang-pill">العربية Arabic</span>
+        <span class="lang-pill">हिन्दी Hindi</span>
+        <span class="lang-pill">Español</span>
+        <span class="lang-pill">Français</span>
+        <span class="lang-pill">Deutsch</span>
+        <span class="lang-pill">Português</span>
+        <span class="lang-pill">Русский</span>
+        <span class="lang-pill">Italiano</span>
+        <span class="lang-pill">ภาษาไทย Thai</span>
+        <span class="lang-pill">Tiếng Việt</span>
+        <span class="lang-pill">עברית Hebrew</span>
+        <span class="lang-pill">বাংলা Bengali</span>
+        <span class="lang-pill">Ελληνικά Greek</span>
+        <span class="lang-pill">Polski</span>
+        <span class="lang-pill">Türkçe</span>
+        <span class="lang-pill">Nederlands</span>
+      </div>
+    </div>
     <div class="lang-grid" id="lang-grid"></div>
   </div>
 </section>

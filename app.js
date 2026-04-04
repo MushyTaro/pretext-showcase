@@ -397,9 +397,10 @@ async function initLanguages() {
   // then explicitly load each font before measuring.
   const entries = []
 
-  LANGUAGES.forEach(({ name, text, fontFamily }) => {
+  LANGUAGES.forEach(({ name, text, fontFamily }, i) => {
     const card = document.createElement('div')
-    card.className = 'lang-card'
+    card.className = 'lang-card reveal'
+    card.style.transitionDelay = `${i * 60}ms`
 
     const nameEl = document.createElement('div')
     nameEl.className = 'lang-name'
@@ -461,3 +462,21 @@ initPlayground()
 initChatBubbles()
 initRipple()
 initLanguages()
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCROLL REVEAL
+// ─────────────────────────────────────────────────────────────────────────────
+
+const revealObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+        revealObserver.unobserve(entry.target)
+      }
+    })
+  },
+  { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+)
+
+document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el))
