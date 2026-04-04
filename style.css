@@ -726,17 +726,16 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .chat-input-row button:active { transform: translateY(0); }
 
 /* ── Ripple ── */
-.ripple-section { background: var(--bg); padding-bottom: 0; }
+.ripple-section { background: var(--surface); }
 
 .ripple-stage {
   position: relative;
-  width: 100%;
-  height: 320px;
+  height: 300px;
   cursor: crosshair;
   overflow: hidden;
-  margin-top: 1rem;
-  background: linear-gradient(180deg, transparent 0%, rgba(124,92,252,0.04) 100%);
-  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .ripple-word {

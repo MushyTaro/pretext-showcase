@@ -219,11 +219,12 @@ function initRipple() {
     wd.el = el
   })
 
-  // Wave grid
-  const CELL = 20
+  // Wave grid — larger cells = smoother wave, less pixel-level noise
+  const CELL = 28
   let COLS = 1, ROWS = 1
   let cur = new Float32Array(1), prv = new Float32Array(1)
-  const DAMP = 0.97
+  // Higher damping = slower decay = smoother, longer-lived ripples
+  const DAMP = 0.986
 
   function resizeGrid(stageW, stageH) {
     COLS = Math.ceil(stageW / CELL) + 2
@@ -247,11 +248,19 @@ function initRipple() {
     cur = next
   }
 
+  // Gaussian-weighted injection for a smooth, round splash
   function inject(px, py, energy) {
-    const c = Math.round(px / CELL)
-    const r = Math.round(py / CELL)
-    if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
-      cur[idx(c, r)] += energy
+    const cc = px / CELL
+    const cr = py / CELL
+    for (let dr = -2; dr <= 2; dr++) {
+      for (let dc = -2; dc <= 2; dc++) {
+        const c = Math.round(cc + dc)
+        const r = Math.round(cr + dr)
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+          const dist2 = dc * dc + dr * dr
+          cur[idx(c, r)] += energy * Math.exp(-dist2 * 0.6)
+        }
+      }
     }
   }
 
@@ -281,16 +290,16 @@ function initRipple() {
 
   // Animation loop
   let idleT = 0
-  function frame(ts) {
+  function frame() {
     idleT += 0.016
 
-    // Idle wave: inject gently in a sine pattern
-    if (idleT % 1.2 < 0.016) {
+    // Idle: a slow, gentle drip every ~3 seconds at a drifting position
+    if (idleT % 3.0 < 0.016) {
       const stageW = stage.clientWidth
       const stageH = stage.clientHeight
-      const cx = (Math.sin(idleT * 0.7) * 0.4 + 0.5) * stageW
-      const cy = (Math.cos(idleT * 0.5) * 0.3 + 0.5) * stageH
-      inject(cx, cy, 0.8)
+      const cx = (Math.sin(idleT * 0.4) * 0.35 + 0.5) * stageW
+      const cy = (Math.cos(idleT * 0.3) * 0.3  + 0.5) * stageH
+      inject(cx, cy, 0.4)
     }
 
     stepWave()
@@ -298,32 +307,28 @@ function initRipple() {
     wordData.forEach(wd => {
       const c = Math.floor(wd.bx / CELL)
       const r = Math.floor(wd.by / CELL)
-      const h = (c >= 0 && c < COLS && r >= 0 && r < ROWS) ? cur[idx(c, r)] : 0
-      const hR = (c+1 < COLS) ? cur[idx(c+1, r)] : 0
-      const hD = (r+1 < ROWS) ? cur[idx(c, r+1)] : 0
-      const dx = (h - hR) * 12
-      const dy = (h - hD) * 12
+      // Central difference gradient — much smoother than forward difference
+      const hL = (c > 0)        ? cur[idx(c-1, r)] : 0
+      const hR = (c+1 < COLS)   ? cur[idx(c+1, r)] : 0
+      const hU = (r > 0)        ? cur[idx(c, r-1)] : 0
+      const hD = (r+1 < ROWS)   ? cur[idx(c, r+1)] : 0
+      const dx = (hL - hR) * 3.5
+      const dy = (hU - hD) * 3.5
       wd.el.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px)`
     })
 
     requestAnimationFrame(frame)
   }
 
-  // Mouse interaction
+  // Mouse interaction — gentle on move, noticeable on click
   stage.addEventListener('mousemove', e => {
     const rect = stage.getBoundingClientRect()
-    inject(e.clientX - rect.left, e.clientY - rect.top, 1.5)
+    inject(e.clientX - rect.left, e.clientY - rect.top, 0.3)
   }, { passive: true })
 
   stage.addEventListener('click', e => {
     const rect = stage.getBoundingClientRect()
-    const cx = e.clientX - rect.left
-    const cy = e.clientY - rect.top
-    for (let dr = -2; dr <= 2; dr++) {
-      for (let dc = -2; dc <= 2; dc++) {
-        inject(cx + dc * CELL, cy + dr * CELL, 6)
-      }
-    }
+    inject(e.clientX - rect.left, e.clientY - rect.top, 1.8)
   })
 
   const ro = new ResizeObserver(() => layoutWords())
