@@ -17,7 +17,8 @@
   <a class="logo" href="#">pretext<span class="badge">demo</span></a>
   <div class="nav-links">
     <a href="#playground">Playground</a>
-    <a href="#masonry">Masonry</a>
+    <a href="#chat">Shrink-wrap</a>
+    <a href="#ripple">Ripple</a>
     <a href="#languages">Languages</a>
     <a href="https://github.com/chenglou/pretext" target="_blank" rel="noopener" class="nav-gh">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -221,18 +222,36 @@ Sphinx of black quartz, judge my vow.
   </div>
 </section>
 
-<!-- ── MASONRY ── -->
-<section class="masonry-section" id="masonry">
+<!-- ── CHAT BUBBLES ── -->
+<section class="chat-section" id="chat">
   <div class="container">
-    <div class="section-label">Real-world use case</div>
-    <h2>Masonry Layout</h2>
+    <div class="section-label">Shrink-wrap demo</div>
+    <h2>Tightest-Fit Chat Bubbles</h2>
     <p class="section-desc">
-      True masonry requires knowing each card's exact height before placing it.
-      pretext provides those heights without DOM reflow — enabling shortest-column
-      placement on every resize. <strong>Try resizing your browser window.</strong>
+      Each bubble's width is binary-searched using <code>layout()</code> to find the minimum
+      <code>maxWidth</code> that keeps the same number of lines — eliminating the wasted whitespace
+      CSS <code>fit-content</code> leaves behind. The badge shows the exact shrink-wrapped width.
+    </p>
+    <div class="chat-window" id="chat-window"></div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Add a message…" autocomplete="off">
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── RIPPLE ── -->
+<section class="ripple-section" id="ripple">
+  <div class="container">
+    <div class="section-label">Physics demo</div>
+    <h2>Text Ripple Wave</h2>
+    <p class="section-desc">
+      Each word is measured with <code>prepare()</code> once, then positioned without touching the DOM.
+      A 2D wave height map propagates across a grid — <code>transform</code> is the only property
+      updated per frame. Move your mouse or click to make waves.
     </p>
   </div>
-  <div id="masonry-root" class="masonry-root"></div>
+  <div class="ripple-stage" id="ripple-stage"></div>
 </section>
 
 <!-- ── LANGUAGES ── -->

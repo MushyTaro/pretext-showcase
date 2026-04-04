@@ -90,101 +90,239 @@ function initPlayground() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MASONRY
+// CHAT BUBBLES — shrink-wrap demo
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MASONRY_QUOTES = [
-  'Calling getBoundingClientRect() forces the browser to flush all pending layout work. For 500 elements, that can cost 30ms+ per frame.',
-  "Canvas measureText gives you the same glyph advance widths the browser's own text engine uses — without touching the DOM.",
-  'pretext separates the expensive work (prepare, once per text) from the cheap work (layout, ~0.0002ms, safe on every resize).',
-  'True masonry layout requires knowing each card\'s height before placing it. Without pretext, you\'re guessing or causing reflow.',
-  'Virtualized lists are impossible to implement correctly unless you know element heights before they\'re rendered.',
-  'Intl.Segmenter handles CJK character-by-character breaking, Thai word segmentation, and Arabic shaping transparently.',
-  'Emoji at small font sizes measure wider in canvas than in DOM on macOS. pretext auto-detects and corrects this per font.',
-  'Mixed bidirectional text (Arabic + English + Hebrew on one line) just works. No special cases in your code.',
-  'layout() is so cheap you can run it inside requestAnimationFrame without dropping frames — even for hundreds of elements.',
-  "Server-side text height calculation is the final piece for eliminating layout shift when new content loads.",
-  'The web has had text rendering for 30 years. pretext is one of the first libraries to get sub-pixel text height right, for every script.',
-  "prepare() runs once. layout() runs on every resize. That's the entire mental model.",
-  'Shrink-wrapping chat bubbles to their exact text width is trivial with walkLineRanges() — you binary-search the tightest fit.',
-  'Text layout is 90% boring Unicode rules and 10% browser quirks that will keep you up at night.',
+const CHAT_FONT = '15px Inter, sans-serif'
+const CHAT_LH   = 23
+
+/** Binary-search the tightest maxWidth that keeps the same line count. */
+function shrinkWrapWidth(prepared) {
+  const { lineCount } = layout(prepared, 9999, CHAT_LH)
+  let lo = 1, hi = 9999
+  for (let i = 0; i < 24; i++) {
+    const mid = (lo + hi) / 2
+    if (layout(prepared, mid, CHAT_LH).lineCount <= lineCount) hi = mid
+    else lo = mid
+  }
+  return Math.ceil(hi)
+}
+
+const SEED_MESSAGES = [
+  { side: 'left',  sender: 'Alice', text: 'Hey! Have you tried pretext yet?' },
+  { side: 'right', sender: 'Bob',   text: "Not yet — what does it actually do? I keep seeing it mentioned." },
+  { side: 'left',  sender: 'Alice', text: "It measures text height without touching the DOM at all. No getBoundingClientRect, no offsetHeight — just canvas measureText plus pure arithmetic. Runs at about 0.0002ms per call so you can use it on every animation frame." },
+  { side: 'right', sender: 'Bob',   text: "That's wild. So no reflow?" },
+  { side: 'left',  sender: 'Alice', text: "Zero. And these chat bubbles are shrink-wrapped to their tightest possible width using a binary search on layout() — try adding one below!" },
 ]
 
-function initMasonry() {
-  const root      = document.getElementById('masonry-root')
-  const FONT      = '15px Inter, sans-serif'
-  const LH        = 22
-  const PAD       = 16
-  const GAP       = 10
-  const MAX_COL   = 360
+function initChatBubbles() {
+  const win    = document.getElementById('chat-window')
+  const input  = /** @type {HTMLInputElement} */ (document.getElementById('chat-input'))
+  const sendBtn = document.getElementById('chat-send')
+  let nextSide = 'right'
 
-  // Prepare all texts once upfront
-  const cards = MASONRY_QUOTES.map(text => ({
-    text,
-    prepared: prepare(text, FONT),
+  function addBubble(text, side, sender) {
+    const HPAD = 28   // left+right padding inside bubble (14px each side)
+    const prepared = prepare(text, CHAT_FONT)
+    const w = shrinkWrapWidth(prepared) + HPAD
+
+    const row = document.createElement('div')
+    row.className = `bubble-row ${side}`
+
+    const senderEl = document.createElement('div')
+    senderEl.className = 'bubble-sender'
+    senderEl.textContent = sender
+
+    const bubble = document.createElement('div')
+    bubble.className = 'bubble'
+    bubble.textContent = text
+    bubble.style.width    = w + 'px'
+    bubble.style.maxWidth = w + 'px'
+    // Override font to match prepare() — important so CSS and canvas agree
+    bubble.style.fontSize   = '15px'
+    bubble.style.fontFamily = 'Inter, sans-serif'
+
+    const badge = document.createElement('div')
+    badge.className = 'bubble-width-badge'
+    badge.textContent = `width: ${w}px`
+
+    row.appendChild(senderEl)
+    row.appendChild(bubble)
+    row.appendChild(badge)
+    win.appendChild(row)
+
+    // Scroll to bottom
+    win.scrollTop = win.scrollHeight
+  }
+
+  // Seed messages
+  SEED_MESSAGES.forEach(({ side, sender, text }) => addBubble(text, side, sender))
+
+  function send() {
+    const text = input.value.trim()
+    if (!text) return
+    const side   = nextSide
+    const sender = side === 'right' ? 'Bob' : 'Alice'
+    addBubble(text, side, sender)
+    nextSide = side === 'right' ? 'left' : 'right'
+    input.value = ''
+    input.focus()
+  }
+
+  sendBtn.addEventListener('click', send)
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') send() })
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RIPPLE — text wave physics demo
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RIPPLE_WORDS = (
+  'pretext measures text without DOM reflow — prepare runs once per string ' +
+  'then layout is pure arithmetic at zero point zero zero zero two milliseconds ' +
+  'per call safe to use on every animation frame even with hundreds of elements ' +
+  'no getBoundingClientRect no offsetHeight no scrollHeight just canvas and math'
+).split(' ')
+
+const RIPPLE_FONT = '16px Inter, sans-serif'
+const WORD_LH     = 24
+const ROW_H       = 40    // vertical spacing between rows
+const PAD_X       = 24
+const PAD_Y       = 20
+
+function initRipple() {
+  const stage = document.getElementById('ripple-stage')
+
+  // Prepare each word once
+  const wordData = RIPPLE_WORDS.map(w => ({
+    text: w,
+    prepared: prepare(w, RIPPLE_FONT),
     el: null,
+    bx: 0, by: 0,   // base position
   }))
 
-  function renderMasonry() {
-    const W = root.clientWidth
-    let colCount, colWidth
+  // Create span elements
+  wordData.forEach(wd => {
+    const el = document.createElement('span')
+    el.className   = 'ripple-word'
+    el.textContent = wd.text
+    stage.appendChild(el)
+    wd.el = el
+  })
 
-    if      (W < 480)  { colCount = 1; colWidth = W - GAP * 2 }
-    else if (W < 780)  { colCount = 2; colWidth = (W - GAP * 3) / 2 }
-    else               { colCount = 3; colWidth = (W - GAP * 4) / 3 }
+  // Wave grid
+  const CELL = 20
+  let COLS = 1, ROWS = 1
+  let cur = new Float32Array(1), prv = new Float32Array(1)
+  const DAMP = 0.97
 
-    colWidth = Math.min(MAX_COL, Math.floor(colWidth))
+  function resizeGrid(stageW, stageH) {
+    COLS = Math.ceil(stageW / CELL) + 2
+    ROWS = Math.ceil(stageH / CELL) + 2
+    cur = new Float32Array(COLS * ROWS)
+    prv = new Float32Array(COLS * ROWS)
+  }
 
-    const textWidth    = colWidth - PAD * 2
-    const contentWidth = colCount * colWidth + (colCount - 1) * GAP
-    const offsetLeft   = Math.max(GAP, (W - contentWidth) / 2)
+  function idx(c, r) { return r * COLS + c }
 
-    const colHeights = Array(colCount).fill(GAP)
+  function stepWave() {
+    const next = new Float32Array(COLS * ROWS)
+    for (let r = 1; r < ROWS - 1; r++) {
+      for (let c = 1; c < COLS - 1; c++) {
+        const avg = (cur[idx(c-1,r)] + cur[idx(c+1,r)] +
+                     cur[idx(c,r-1)] + cur[idx(c,r+1)]) / 2
+        next[idx(c,r)] = DAMP * (avg - prv[idx(c,r)])
+      }
+    }
+    prv = cur
+    cur = next
+  }
 
-    const positions = cards.map(({ prepared }) => {
-      // Find shortest column
-      let shortest = 0
-      for (let c = 1; c < colCount; c++) {
-        if (colHeights[c] < colHeights[shortest]) shortest = c
+  function inject(px, py, energy) {
+    const c = Math.round(px / CELL)
+    const r = Math.round(py / CELL)
+    if (c >= 0 && c < COLS && r >= 0 && r < ROWS) {
+      cur[idx(c, r)] += energy
+    }
+  }
+
+  // Layout words — uses shrinkWrapWidth() to measure each word's pixel width
+  // without reading the DOM (zero reflow).
+  function layoutWords() {
+    const stageW = stage.clientWidth
+    const stageH = stage.clientHeight
+    resizeGrid(stageW, stageH)
+
+    let cx = PAD_X, cy = PAD_Y
+    wordData.forEach(wd => {
+      const wPx = shrinkWrapWidth(wd.prepared) + 4  // +4px slight padding
+
+      if (cx + wPx + 8 > stageW - PAD_X && cx > PAD_X) {
+        cx = PAD_X
+        cy += ROW_H
       }
 
-      // layout() — zero DOM, pure arithmetic
-      const { height } = layout(prepared, textWidth, LH)
-      const cardH      = height + PAD * 2
-
-      const x = offsetLeft + shortest * (colWidth + GAP)
-      const y = colHeights[shortest]
-
-      colHeights[shortest] += cardH + GAP
-
-      return { x, y, w: colWidth, h: cardH }
-    })
-
-    const totalH = Math.max(...colHeights) + GAP
-    root.style.height = totalH + 'px'
-
-    cards.forEach((card, i) => {
-      const pos = positions[i]
-
-      if (!card.el) {
-        card.el = document.createElement('div')
-        card.el.className    = 'masonry-card'
-        card.el.textContent  = card.text
-        card.el.style.animationDelay = (i * 40) + 'ms'
-        root.appendChild(card.el)
-      }
-
-      const el = card.el
-      el.style.left   = pos.x + 'px'
-      el.style.top    = pos.y + 'px'
-      el.style.width  = pos.w + 'px'
-      // Height driven by content; pretext told us what it would be
+      wd.bx = cx
+      wd.by = cy
+      wd.el.style.left = cx + 'px'
+      wd.el.style.top  = cy + 'px'
+      cx += wPx + 8
     })
   }
 
-  const ro = new ResizeObserver(renderMasonry)
-  ro.observe(root)
-  renderMasonry()
+  // Animation loop
+  let idleT = 0
+  function frame(ts) {
+    idleT += 0.016
+
+    // Idle wave: inject gently in a sine pattern
+    if (idleT % 1.2 < 0.016) {
+      const stageW = stage.clientWidth
+      const stageH = stage.clientHeight
+      const cx = (Math.sin(idleT * 0.7) * 0.4 + 0.5) * stageW
+      const cy = (Math.cos(idleT * 0.5) * 0.3 + 0.5) * stageH
+      inject(cx, cy, 0.8)
+    }
+
+    stepWave()
+
+    wordData.forEach(wd => {
+      const c = Math.floor(wd.bx / CELL)
+      const r = Math.floor(wd.by / CELL)
+      const h = (c >= 0 && c < COLS && r >= 0 && r < ROWS) ? cur[idx(c, r)] : 0
+      const hR = (c+1 < COLS) ? cur[idx(c+1, r)] : 0
+      const hD = (r+1 < ROWS) ? cur[idx(c, r+1)] : 0
+      const dx = (h - hR) * 12
+      const dy = (h - hD) * 12
+      wd.el.style.transform = `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px)`
+    })
+
+    requestAnimationFrame(frame)
+  }
+
+  // Mouse interaction
+  stage.addEventListener('mousemove', e => {
+    const rect = stage.getBoundingClientRect()
+    inject(e.clientX - rect.left, e.clientY - rect.top, 1.5)
+  }, { passive: true })
+
+  stage.addEventListener('click', e => {
+    const rect = stage.getBoundingClientRect()
+    const cx = e.clientX - rect.left
+    const cy = e.clientY - rect.top
+    for (let dr = -2; dr <= 2; dr++) {
+      for (let dc = -2; dc <= 2; dc++) {
+        inject(cx + dc * CELL, cy + dr * CELL, 6)
+      }
+    }
+  })
+
+  const ro = new ResizeObserver(() => layoutWords())
+  ro.observe(stage)
+
+  layoutWords()
+  requestAnimationFrame(frame)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -307,5 +445,6 @@ function initCounter() {
 
 initCounter()
 initPlayground()
-initMasonry()
+initChatBubbles()
+initRipple()
 initLanguages()

@@ -608,36 +608,148 @@ input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
   50% { opacity: 0.6; transform: scale(0.85); }
 }
 
-/* ── Masonry ── */
-.masonry-section { background: var(--surface); }
+/* ── Chat Bubbles ── */
+.chat-section { background: var(--surface); }
 
-.masonry-root {
-  position: relative;
-  width: 100%;
-  min-height: 300px;
-  padding: 0 2rem;
-  max-width: 1100px;
-  margin: 0 auto;
+.chat-section .section-desc code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875em;
+  color: var(--cyan);
+  background: rgba(6, 214, 214, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
 }
 
-.masonry-card {
-  position: absolute;
+.chat-window {
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 0.875rem;
-  line-height: 1.65;
-  color: var(--text2);
-  padding: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.3s ease;
-  animation: card-in 0.4s ease both;
-  cursor: default;
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 320px;
+  max-height: 480px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
-.masonry-card:hover {
-  border-color: var(--border2);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  transform: translateY(-2px);
+.bubble-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.bubble-row.right { align-items: flex-end; }
+.bubble-row.left  { align-items: flex-start; }
+
+.bubble-sender {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+  padding: 0 4px;
+}
+
+.bubble {
+  border-radius: 18px;
+  padding: 10px 14px;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  word-break: break-word;
+  transition: max-width 0.3s ease, width 0.3s ease;
+}
+
+.bubble-row.right .bubble {
+  background: var(--accent);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.bubble-row.left .bubble {
+  background: var(--surface3);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.bubble-width-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text3);
+  background: var(--surface3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-top: 4px;
+  align-self: inherit;
+}
+
+.bubble-row.right .bubble-width-badge { color: rgba(124,92,252,0.8); }
+
+.chat-input-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.chat-input-row input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  padding: 10px 16px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.chat-input-row input:focus { border-color: var(--accent); }
+
+.chat-input-row button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.chat-input-row button:hover { opacity: 0.9; transform: translateY(-1px); }
+.chat-input-row button:active { transform: translateY(0); }
+
+/* ── Ripple ── */
+.ripple-section { background: var(--bg); padding-bottom: 0; }
+
+.ripple-stage {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  cursor: crosshair;
+  overflow: hidden;
+  margin-top: 1rem;
+  background: linear-gradient(180deg, transparent 0%, rgba(124,92,252,0.04) 100%);
+  border-top: 1px solid var(--border);
+}
+
+.ripple-word {
+  position: absolute;
+  white-space: nowrap;
+  will-change: transform;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  color: var(--text2);
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  transition: color 0.1s;
 }
 
 @keyframes card-in {
@@ -763,7 +875,6 @@ footer {
 @media (max-width: 480px) {
   section { padding: 4rem 0; }
   h2 { font-size: 1.75rem; }
-  .masonry-root { padding: 0 1rem; }
 }
 
 /* ── Scrollbar ── */
