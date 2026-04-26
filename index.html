@@ -3,8 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>pretext — Text Layout Without DOM Reflow</title>
+  <title>pretext — text layout without DOM reflow</title>
   <meta name="description" content="Interactive demo of @chenglou/pretext — a JS library that measures multiline text height without triggering DOM layout reflow. Supports all languages, emoji, and bidirectional text.">
+  <meta property="og:title" content="pretext — text layout without DOM reflow">
+  <meta property="og:description" content="pretext measures multiline text height using Canvas measureText + pure arithmetic — zero DOM reflow. Interactive demo with playground, chat bubbles, and wave physics.">
+  <meta property="og:url" content="https://mushytaro.github.io/pretext-showcase/">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23000'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Inter,sans-serif' font-weight='700' font-size='18' fill='%23fff'%3Ep%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+KR:wght@400&family=Noto+Sans+JP:wght@400&family=Noto+Sans+SC:wght@400&family=Noto+Sans+Arabic:wght@400&family=Noto+Sans+Devanagari:wght@400&display=swap" rel="stylesheet">
@@ -31,7 +36,7 @@
 <section class="hero">
   <div class="hero-inner">
     <div class="pill">open source · MIT license</div>
-    <h1>Measure text<br><span class="gradient-text">without DOM reflow</span></h1>
+    <h1>Measure text<br>without DOM reflow</h1>
     <p class="hero-desc">
       <code>@chenglou/pretext</code> measures multiline text height using Canvas <code>measureText</code> +
       pure arithmetic — bypassing costly DOM layout entirely. Works with every language, emoji, and
@@ -90,7 +95,7 @@
 </section>
 
 <!-- ── HOW IT WORKS ── -->
-<section class="how-it-works">
+<section>
   <div class="container">
     <div class="section-label">Under the hood</div>
     <h2>Two phases, one insight</h2>
@@ -106,7 +111,7 @@
           forces the browser to synchronously flush all pending style/layout changes —
           a full <strong>layout reflow</strong>. 500 text blocks = 500 reflows = 30ms+ per frame.
         </p>
-        <div class="step-tag bad">expensive</div>
+        <div class="step-tag">expensive</div>
       </div>
 
       <div class="step-arrow">
@@ -123,7 +128,7 @@
           <code>measureText</code>, and caches the results. Handles emoji correction,
           bidirectional levels, CJK per-char breaking. Runs <strong>once per text</strong>.
         </p>
-        <div class="step-tag neutral">one-time cost</div>
+        <div class="step-tag">one-time cost</div>
       </div>
 
       <div class="step-arrow">
@@ -140,7 +145,7 @@
           no DOM, no canvas, no side effects. Safe to call on <strong>every pixel of resize</strong>.
           ~0.0002ms per text.
         </p>
-        <div class="step-tag good">near-zero cost</div>
+        <div class="step-tag">near-zero cost</div>
       </div>
 
     </div>
@@ -148,7 +153,7 @@
 </section>
 
 <!-- ── PLAYGROUND ── -->
-<section class="playground" id="playground">
+<section id="playground">
   <div class="container">
     <div class="section-label">Interactive demo</div>
     <h2>Live Playground</h2>
@@ -207,7 +212,7 @@ Sphinx of black quartz, judge my vow.
             <div class="metric-val" id="m-time">—</div>
             <div class="metric-label">layout() avg</div>
           </div>
-          <div class="metric-card accent">
+          <div class="metric-card">
             <div class="metric-val">0</div>
             <div class="metric-label">DOM reflows</div>
           </div>
@@ -223,7 +228,7 @@ Sphinx of black quartz, judge my vow.
 </section>
 
 <!-- ── CHAT BUBBLES ── -->
-<section class="chat-section" id="chat">
+<section id="chat">
   <div class="container">
     <div class="section-label">Shrink-wrap demo</div>
     <h2>Tightest-Fit Chat Bubbles</h2>
@@ -241,7 +246,7 @@ Sphinx of black quartz, judge my vow.
 </section>
 
 <!-- ── RIPPLE ── -->
-<section class="ripple-section" id="ripple">
+<section id="ripple">
   <div class="container">
     <div class="section-label">Physics demo</div>
     <h2>Text Ripple Wave</h2>
@@ -255,7 +260,7 @@ Sphinx of black quartz, judge my vow.
 </section>
 
 <!-- ── LANGUAGES ── -->
-<section class="languages" id="languages">
+<section id="languages">
   <div class="container">
     <div class="section-label">i18n support</div>
     <h2>Every Writing System</h2>
@@ -310,6 +315,25 @@ Sphinx of black quartz, judge my vow.
       </div>
     </div>
     <div class="lang-grid" id="lang-grid"></div>
+  </div>
+</section>
+
+<!-- ── AUTHOR ── -->
+<section id="author">
+  <div class="container">
+    <div class="author-card">
+      <div class="author-avatar">M</div>
+      <div class="author-body">
+        <p class="author-line">
+          Demo by <a href="https://github.com/MushyTaro" target="_blank" rel="noopener">MushyTaro</a>
+        </p>
+        <p class="author-desc">
+          Built to explore <code>@chenglou/pretext</code> by <a href="https://github.com/chenglou" target="_blank" rel="noopener">Cheng Lou</a> —
+          a showcase of the library's core techniques: zero-reflow text measurement,
+          shrink-wrap layout, and canvas-backed word physics.
+        </p>
+      </div>
+    </div>
   </div>
 </section>
 
